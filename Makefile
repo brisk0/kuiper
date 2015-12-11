@@ -7,7 +7,6 @@ all: asteroids
 
 release: win32 *.h *.c
 	clang $(SRCNAME) -o$(FILENAME) -std=$(STD) -lSDL2 -lSDL2_image -lm -lz -Wall -O2
-	git archive --prefix "asteroids/" -o asteroids.zip master
 
 $(FILENAME): *.h *.c
 	clang $(SRCNAME) -o$(FILENAME) -std=$(STD) -lSDL2 -lSDL2_image -lm -lz -Wall -O0 -g

@@ -218,7 +218,9 @@ main(int argc, char **argv) {
 	SDL_SetWindowTitle(window, "Kuiper");
 
 	//Text
-	load_fonts(renderer);
+	if(!load_fonts(renderer)) {
+		printf("Error! Failed to load fonts: %s", IMG_GetError());
+	}
 
 	//Splash Screen
 	SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
@@ -387,6 +389,7 @@ main(int argc, char **argv) {
 				//Check for Player-Asteroid collision
 				if(asteroids[i].exists && poly_in_poly(x, y, 3, ship_poly, asteroids[i].x, asteroids[i].y, asteroids[i].num_vertices, asteroids[i].vertices)) {
 					reset_player();
+					destroy_asteroid(&asteroids[i]);
 					score -= 1000;
 					if(score < 0) {
 						score = 0;
