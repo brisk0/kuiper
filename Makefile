@@ -16,6 +16,6 @@ run: $(FILENAME)
 	./$(FILENAME)
 
 win32:
-	i686-w64-mingw32-gcc $(SRCNAME) -o$(FILENAME).exe -std=$(STD) $(MINGWSDLARGS) $(MINGWSDLIMAGEARGS) -lSDL2_image -lpng16 -lm -lz -Wall -O2 -static
+	i686-w64-mingw32-gcc $(SRCNAME) -owindows/$(FILENAME).exe -std=$(STD) `i686-w64-mingw32-sdl2-config --libs` `i686-w64-mingw32-pkg-config SDL2_image --libs` -lm -lz -Wall -O2
 
 .PHONY: all run

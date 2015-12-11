@@ -28,13 +28,12 @@ Dependencies
 
 Binary
 ------
-	asteroids.exe
+	windows/asteroids.exe
 Compiled for 32-bit Windows
 
 Compile
 -------
 	> make win32
-	> ./asteroids.exe
 
 Controls
 ========
