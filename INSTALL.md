@@ -4,8 +4,8 @@ Linux
 Dependencies
 ------------
 * SDL2
-* clang (for build)
-* gnu make (for build)
+* Clang (for build)
+* Gnu Make (for build)
 
 Binary
 ------
@@ -35,3 +35,9 @@ Compile
 -------
 	> make win32
 	> ./asteroids.exe
+
+Controls
+========
+* Left/Right: Turn ship
+* Space: Fire bullet
+* R: Restart at end of game

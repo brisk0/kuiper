@@ -1,4 +1,5 @@
 #include "control.h"
+#include "text.c"
 #define SDL_MAIN_HANDLED
 #include "SDL2/SDL.h"
 #include "SDL2/SDL_video.h"
@@ -34,6 +35,9 @@ float by;
 float bvx;
 float bvy;
 bool bullet_exists = false;
+
+int score;
+char score_string[1000];
 
 struct Point {
 	float x;
@@ -171,6 +175,35 @@ destroy_asteroid(struct Asteroid *a) {
 		add_asteroid(gen_asteroid(x, y, class - 1));
 		add_asteroid(gen_asteroid(x, y, class - 1));
 	}
+	score += 100;
+}
+
+void
+reset_player(){
+	x = SCREEN_WIDTH/2;
+	y = 3*SCREEN_HEIGHT/4;
+	vx = 0;
+	vy = 0;
+	rot = -M_PI/2;
+}
+
+void
+wait_for_key(SDL_Keycode sym) {
+	bool wait = true;
+	SDL_Event event;
+	while(wait) {
+		while(SDL_PollEvent(&event)) {
+			if(event.type == SDL_KEYDOWN) {
+				if(event.key.keysym.sym == sym) {
+					wait = false;
+				}
+			} else if(event.type == SDL_QUIT) {
+				SDL_Quit();
+				exit(EXIT_SUCCESS);
+			}
+		}
+		SDL_Delay(16);
+	}
 }
 
 int
@@ -182,8 +215,19 @@ main(int argc, char **argv) {
 		fprintf(stderr, "Window creation failed: %s", SDL_GetError());
 		exit(EXIT_FAILURE);
 	}
-	SDL_SetWindowTitle(window, "PinPoly Test");
-	//initialise first asteroids
+	SDL_SetWindowTitle(window, "Kuiper");
+
+	//Text
+	load_fonts(renderer);
+
+	//Splash Screen
+	SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
+	SDL_RenderClear(renderer);
+	draw_string(renderer, "KUIPER!", SCREEN_WIDTH/2, SCREEN_HEIGHT/3, medium, center, middle);
+	draw_string(renderer, "Press [space] to Start!", SCREEN_WIDTH/2, 2*SCREEN_HEIGHT/3, small, center, middle);
+	SDL_Delay(100);
+	SDL_RenderPresent(renderer);
+	wait_for_key(SDLK_SPACE);
 
 	while(1) {
 		//set up for game start
@@ -192,22 +236,24 @@ main(int argc, char **argv) {
 		for(int i = 1; i < MAX_ASTEROIDS; i++) {
 			asteroids[i].exists = false;
 		}
-		x = SCREEN_WIDTH/2;
-		y = 3*SCREEN_HEIGHT/4;
-		vx = 0;
-		vy = 0;
-		rot = -M_PI/2;
+		reset_player();
+		score = 0;
 
 		//game loop
 		int t = SDL_GetTicks();
 		int dt = 0;
 		SDL_Event event;
 		while(game_on) {
+			//Begin Frame
 			dt = SDL_GetTicks() - t;
 			t += dt;
-
 			SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
 			SDL_RenderClear(renderer);
+
+			//Draw Score
+			sprintf(score_string, "%d", score);
+			draw_string(renderer, score_string, 0, 0, small, left, bottom);
+
 			//EVENT LOOP
 			while(SDL_PollEvent(&event)) {
 				switch(event.type) {
@@ -265,6 +311,7 @@ main(int argc, char **argv) {
 				}
 			}
 			SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
+
 			//player physics
 			x += vx;
 			y += vy;
@@ -296,6 +343,7 @@ main(int argc, char **argv) {
 			struct Point ship_poly[3];
 			construct_ship_poly(ship_poly);
 			draw_poly_offset(x, y, 3, ship_poly);
+
 			//bullet
 			if(bullet_exists){
 				bx += bvx;
@@ -306,9 +354,11 @@ main(int argc, char **argv) {
 				}
 				SDL_RenderDrawPoint(renderer, bx, by);
 			}
-			//draw asteroids
+
+			//Asteroids
 			bool asteroids_clear = true;
 			for(int i = 0; i < MAX_ASTEROIDS; i++) {
+				//Asteroid Physics
 				if(!asteroids[i].exists) {
 					continue;
 				} else {
@@ -320,6 +370,7 @@ main(int argc, char **argv) {
 					destroy_asteroid(&asteroids[i]);
 					bullet_exists = false;
 				}
+				//Wrap Asteroids
 				float buffer_zone = 2*BASE_RADIUS*1.2*asteroids[i].class;
 				if(asteroids[i].x > SCREEN_WIDTH + buffer_zone) {
 					asteroids[i].x -= SCREEN_WIDTH + 2*buffer_zone;
@@ -332,21 +383,34 @@ main(int argc, char **argv) {
 					asteroids[i].y += SCREEN_HEIGHT + 2*buffer_zone;
 				}
 				draw_asteroid(asteroids[i]);
+
+				//Check for Player-Asteroid collision
 				if(asteroids[i].exists && poly_in_poly(x, y, 3, ship_poly, asteroids[i].x, asteroids[i].y, asteroids[i].num_vertices, asteroids[i].vertices)) {
-					printf("FAILURE!\n");
-					game_on = false;
+					reset_player();
+					score -= 1000;
+					if(score < 0) {
+						score = 0;
+					}
 				}
 			}
+
 			if(asteroids_clear) {
-				printf("SUCCESS!\n");
 				game_on = false;
 			}
+
+			//End Frame
 			SDL_RenderPresent(renderer);
 			dt = SDL_GetTicks() - t;
 			if(dt < 16) {
 				SDL_Delay(16 - dt);
 			}
 		}
+		//Game Ended
+		draw_string(renderer, "Your Score:", SCREEN_WIDTH/2, SCREEN_HEIGHT/3, small, center, middle);
+		draw_string(renderer, score_string, SCREEN_WIDTH/2, SCREEN_HEIGHT/2, medium, center, middle);
+		draw_string(renderer, "Press 'R' to Restart", SCREEN_WIDTH/2, 2*SCREEN_HEIGHT/3, small, center, middle);
+		SDL_RenderPresent(renderer);
+		wait_for_key(SDLK_r);
 	}
 	return 0;
 }

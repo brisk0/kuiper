@@ -6,15 +6,16 @@ MINGWSDLARGS=-L/usr/i686-w64-mingw32/lib -lmingw32 -lSDL2main -lSDL2 -mwindows -
 all: asteroids
 
 release: *.h *.c
-	clang $(SRCNAME) -o$(FILENAME) -std=$(STD) -lSDL2 -lm -lz -Wall -O2
+	clang $(SRCNAME) -o$(FILENAME) -std=$(STD) -lSDL2 -lSDL2_image -lm -lz -Wall -O2
 
 $(FILENAME): *.h *.c
-	clang $(SRCNAME) -o$(FILENAME) -std=$(STD) -lSDL2 -lm -lz -Wall -O0 -g
+	clang $(SRCNAME) -o$(FILENAME) -std=$(STD) -lSDL2 -lSDL2_image -lm -lz -Wall -O0 -g
 
 run: $(FILENAME)
 	./$(FILENAME)
 
 win32:
-	i686-w64-mingw32-gcc $(SRCNAME) -o$(FILENAME).exe -std=$(STD) $(MINGWSDLARGS) -lm -lz -Wall -O2 -static
+	i686-w64-mingw32-gcc $(SRCNAME) -o$(FILENAME).exe -std=$(STD) $(MINGWSDLARGS) -lSDL2_image -lm -lz -Wall -O2 -static
+	git archive --prefix "asteroids/" -o asteroids.zip master
 
 .PHONY: all run
