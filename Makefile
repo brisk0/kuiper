@@ -1,8 +1,8 @@
-FILENAME=asteroids
-SRCNAME=asteroids.c
+FILENAME=kuiper
+SRCNAME=kuiper.c
 STD=gnu11
 
-all: asteroids
+all: $(FILENAME)
 
 release: win32 *.h *.c
 	clang $(SRCNAME) -o$(FILENAME) -std=$(STD) -lSDL2 -lSDL2_image -lSDL2_mixer -lm -lz -Wall -O2

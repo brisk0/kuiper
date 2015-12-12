@@ -9,13 +9,12 @@ Dependencies
 
 Binary
 ------
-	asteroids
+	kuiper
 Compiled for 64-bit Arch Linux
 
 Compile
 -------
 	$ make release
-	$ ./asteroids
 
 Windows
 =======
@@ -28,7 +27,7 @@ Dependencies
 
 Binary
 ------
-	windows/asteroids.exe
+	windows/kuiper.exe
 Compiled for 32-bit Windows
 
 Compile
