@@ -4,6 +4,7 @@
 #include "SDL2/SDL.h"
 #include "SDL2/SDL_video.h"
 #include "SDL2/SDL_render.h"
+#include "SDL2/SDL_mixer.h"
 #include <stdio.h>
 #include <stdbool.h>
 #include <stdlib.h>
@@ -60,6 +61,12 @@ SDL_Renderer* renderer;
 
 struct Asteroid asteroids [MAX_ASTEROIDS] = {};
 
+//Sounds
+Mix_Music *music;
+Mix_Chunk *sound_shoot;
+Mix_Chunk *sound_engine;
+int channel_sound_engine;
+
 void
 init() {
 	//Check SDL Version
@@ -73,7 +80,7 @@ init() {
 	}
 
 
-	if(SDL_Init(SDL_INIT_VIDEO | SDL_INIT_JOYSTICK | SDL_INIT_GAMECONTROLLER)) {
+	if(SDL_Init(SDL_INIT_VIDEO | SDL_INIT_JOYSTICK | SDL_INIT_GAMECONTROLLER | SDL_INIT_AUDIO)) {
 		fprintf(stderr, "Initialisation Error: %s", SDL_GetError());
 		exit(EXIT_FAILURE);
 	}
@@ -85,6 +92,26 @@ init() {
 	SDL_GameControllerEventState(SDL_ENABLE);
 	SDL_GameControllerAddMappingsFromFile("gamecontrollerdb.txt");
 
+	//Sound and Music
+	Mix_Init(0);
+	if(Mix_OpenAudio(MIX_DEFAULT_FREQUENCY, MIX_DEFAULT_FORMAT, 1, 4096)) {
+		printf("Error opening audio: %s\n", Mix_GetError());
+	}
+
+	music = Mix_LoadMUS("bgm.wav");
+	Mix_PlayMusic(music, -1);
+	sound_shoot = Mix_LoadWAV("shoot.wav");
+	sound_engine = Mix_LoadWAV("engine.wav");
+	channel_sound_engine = Mix_PlayChannel(-1, sound_engine, -1);
+	Mix_Pause(channel_sound_engine);
+}
+
+void
+quit(int exit_code) {
+	Mix_CloseAudio();
+	Mix_Quit();
+	SDL_Quit();
+	exit(exit_code);
 }
 
 bool
@@ -198,8 +225,7 @@ wait_for_key(SDL_Keycode sym) {
 					wait = false;
 				}
 			} else if(event.type == SDL_QUIT) {
-				SDL_Quit();
-				exit(EXIT_SUCCESS);
+				quit(EXIT_SUCCESS);
 			}
 		}
 		SDL_Delay(16);
@@ -225,8 +251,10 @@ main(int argc, char **argv) {
 	//Splash Screen
 	SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
 	SDL_RenderClear(renderer);
-	draw_string(renderer, "KUIPER!", SCREEN_WIDTH/2, SCREEN_HEIGHT/3, medium, center, middle);
-	draw_string(renderer, "Press [space] to Start!", SCREEN_WIDTH/2, 2*SCREEN_HEIGHT/3, small, center, middle);
+	draw_string(renderer, "Brandon Blake's", SCREEN_WIDTH/2, 3, small, center, bottom);
+	draw_string(renderer, "KUIPER!", SCREEN_WIDTH/2, 2*SCREEN_HEIGHT/5, medium, center, middle);
+	draw_string(renderer, "Press [space] to Start!", SCREEN_WIDTH/2, 3*SCREEN_HEIGHT/5, small, center, middle);
+	draw_string(renderer, "Music by Kaelaholme, CC0", SCREEN_WIDTH/2, SCREEN_HEIGHT - 3, small, center, top);
 	SDL_Delay(100);
 	SDL_RenderPresent(renderer);
 	wait_for_key(SDLK_SPACE);
@@ -269,6 +297,7 @@ main(int argc, char **argv) {
 								break;
 							case SDLK_UP:
 								controller_state.up = true;
+								Mix_Resume(channel_sound_engine);
 								break;
 							case SDLK_DOWN:
 								controller_state.down = true;
@@ -281,6 +310,7 @@ main(int argc, char **argv) {
 									bvx = vx + 2*BASE_SPEED*cos(rot);
 									bvy = vy + 2*BASE_SPEED*sin(rot);
 									bullet_exists = true;
+									Mix_PlayChannel(-1, sound_shoot, 0);
 								}
 								break;
 
@@ -296,6 +326,7 @@ main(int argc, char **argv) {
 								break;
 							case SDLK_UP:
 								controller_state.up = false;
+								Mix_Pause(channel_sound_engine);
 								break;
 							case SDLK_DOWN:
 								controller_state.down = false;
@@ -308,8 +339,7 @@ main(int argc, char **argv) {
 						break;
 						//System Events
 					case SDL_QUIT:
-						SDL_Quit();
-						exit(EXIT_SUCCESS);
+						quit(EXIT_SUCCESS);
 				}
 			}
 			SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
